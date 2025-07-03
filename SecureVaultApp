@@ -1,4 +1,4 @@
-public class SecureWallApp {
+public class SecureVaultApp {
 
     public static final int MAX_CODE = 9999;
     public static volatile boolean codeCracked = false; // Shared flag
