@@ -1,0 +1,109 @@
+public class SecureWallApp {
+
+    public static final int MAX_CODE = 9999;
+    public static volatile boolean codeCracked = false; // Shared flag
+
+    public static void main(String[] args) {
+        Vault vault = new Vault((int) (Math.random() * MAX_CODE));
+        System.out.println("Secret code is set. Hackers, begin!");
+
+        Thread hacker1 = new AscendingHacker(vault);
+        Thread hacker2 = new DescendingHacker(vault);
+        Thread police = new PoliceThread();
+
+        hacker1.start();
+        hacker2.start();
+        police.start();
+    }
+
+    // ---------- Vault Class ----------
+    static class Vault {
+        private int secretCode;
+
+        public Vault(int secretCode) {
+            this.secretCode = secretCode;
+        }
+
+        public boolean isCorrectCode(int guess) {
+            try {
+                Thread.sleep(5); // simulate time to check
+            } catch (InterruptedException ignored) {
+            }
+            return this.secretCode == guess;
+        }
+    }
+
+    // ---------- Base Hacker Thread ----------
+    static abstract class HackerThread extends Thread {
+        protected Vault vault;
+
+        public HackerThread(Vault vault) {
+            this.vault = vault;
+            this.setName(this.getClass().getSimpleName());
+            this.setPriority(Thread.MAX_PRIORITY);
+        }
+
+        @Override
+        public void start() {
+            System.out.println("Starting thread: " + this.getName());
+            super.start();
+        }
+    }
+
+    // ---------- Ascending Hacker ----------
+    static class AscendingHacker extends HackerThread {
+        public AscendingHacker(Vault vault) {
+            super(vault);
+        }
+
+        @Override
+        public void run() {
+            for (int guess = 0; guess <= MAX_CODE && !codeCracked; guess++) {
+                if (vault.isCorrectCode(guess)) {
+                    System.out.println(this.getName() + " cracked the code: " + guess);
+                    codeCracked = true;
+                    return;
+                }
+            }
+        }
+    }
+
+    // ---------- Descending Hacker ----------
+    static class DescendingHacker extends HackerThread {
+        public DescendingHacker(Vault vault) {
+            super(vault);
+        }
+
+        @Override
+        public void run() {
+            for (int guess = MAX_CODE; guess >= 0 && !codeCracked; guess--) {
+                if (vault.isCorrectCode(guess)) {
+                    System.out.println(this.getName() + " cracked the code: " + guess);
+                    codeCracked = true;
+                    return;
+                }
+            }
+        }
+    }
+
+    // ---------- Police Thread ----------
+    static class PoliceThread extends Thread {
+        @Override
+        public void run() {
+            for (int i = 10; i > 0 && !codeCracked; i--) {
+                System.out.println("Police arriving in " + i + " seconds...");
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ignored) {
+                }
+            }
+
+            if (!codeCracked) {
+                System.out.println("Police has arrived! Hackers arrested.");
+                System.exit(0);
+            } else {
+                System.out.println("Hackers escaped before police arrived.");
+            }
+        }
+    }
+}
